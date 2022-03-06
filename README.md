@@ -1,0 +1,2 @@
+# EasyMango
+library for Mangodb
