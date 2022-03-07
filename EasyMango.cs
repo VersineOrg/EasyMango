@@ -7,6 +7,13 @@ public class EasyMango
 {
     private IMongoCollection<BsonDocument> collection;
     
+    public enum SortingOrder
+    {
+        Default,
+        Ascending,
+        Descending
+    }
+    
     public EasyMango(string connectionString, string databaseName, string collectionName)
     {
         // Connect to the MongoDB Database
@@ -20,6 +27,25 @@ public class EasyMango
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
         
         result = collection.Find(filter).FirstOrDefault();
+
+        return (result != null);
+    }
+    public bool GetSingleDatabaseEntry(string field, string value,SortingOrder sortingOrder,string sortingField, out BsonDocument result)
+    {
+        FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
+
+        switch (sortingOrder)
+        {
+            case SortingOrder.Ascending:
+                result = collection.Find(filter).SortBy(bson => bson[sortingField]).FirstOrDefault();
+                break;
+            case SortingOrder.Descending: 
+                result= collection.Find(filter).SortByDescending(bson => bson[sortingField]).FirstOrDefault();
+                break;
+            default:
+                result = collection.Find(filter).FirstOrDefault();
+                break;
+        }
 
         return (result != null);
     }
