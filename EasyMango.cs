@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace EasyMango;
@@ -22,7 +22,7 @@ public class EasyMango
         collection = database.GetCollection<BsonDocument>(collectionName);
     }
 
-    public bool GetSingleDatabaseEntry(string field, string value, out BsonDocument result)
+    public bool GetSingleDatabaseEntry<T>(string field, T value, out BsonDocument result)
     {
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
         
@@ -30,7 +30,7 @@ public class EasyMango
 
         return (result != null);
     }
-    public bool GetSingleDatabaseEntry(string field, string value,SortingOrder sortingOrder,string sortingField, out BsonDocument result)
+    public bool GetSingleDatabaseEntry<T>(string field, T value,SortingOrder sortingOrder,string sortingField, out BsonDocument result)
     {
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
 
@@ -40,24 +40,42 @@ public class EasyMango
                 result = collection.Find(filter).SortBy(bson => bson[sortingField]).FirstOrDefault();
                 break;
             case SortingOrder.Descending: 
-                result= collection.Find(filter).SortByDescending(bson => bson[sortingField]).FirstOrDefault();
+                result = collection.Find(filter).SortByDescending(bson => bson[sortingField]).FirstOrDefault();
                 break;
             default:
-                result = collection.Find(filter).FirstOrDefault();
+                GetSingleDatabaseEntry(field, value, out result);
                 break;
         }
 
         return (result != null);
     }
-    public bool GetMultipleDatabaseEntries(string field, string value, out List<BsonDocument> result)
+    public bool GetMultipleDatabaseEntries<T>(string field, T value, out List<BsonDocument> result)
     {
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
         result = collection.Find(filter).ToList();
 
         return (result != null);
     }
-    
-    public bool ReplaceSingleDatabaseEntry(string field, string value, BsonDocument entry)
+    public bool GetMultipleDatabaseEntries<T>(string field, T value,SortingOrder sortingOrder, string sortingField, out List<BsonDocument> result)
+    {
+        FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
+        
+        switch (sortingOrder)
+        {
+            case SortingOrder.Ascending:
+                result = collection.Find(filter).SortBy(bson => bson[sortingField]).ToList();
+                break;
+            case SortingOrder.Descending: 
+                result = collection.Find(filter).SortByDescending(bson => bson[sortingField]).ToList();
+                break;
+            default:
+                GetMultipleDatabaseEntries(field, value, out result);
+                break;
+        }
+
+        return (result != null);
+    }
+    public bool ReplaceSingleDatabaseEntry<T>(string field, T value, BsonDocument entry)
     {
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
         try
@@ -70,10 +88,9 @@ public class EasyMango
         }
         return true;
     }
-    public bool ReplaceMultipleDatabaseEntries(string field, string value, BsonDocument entry)
+    public bool ReplaceMultipleDatabaseEntries<T>(string field, T value, BsonDocument entry)
     {
-        List<BsonDocument> result = new List<BsonDocument>();
-        if (!GetMultipleDatabaseEntries(field, value, out result))
+        if (!GetMultipleDatabaseEntries(field, value, out List<BsonDocument> result))
         {
             return false;
         }
@@ -117,7 +134,7 @@ public class EasyMango
         return true;
     }
     
-    public bool RemoveSingleDatabaseEntry(string field, string value)
+    public bool RemoveSingleDatabaseEntry<T>(string field, T value)
     {
         FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
         try
@@ -130,10 +147,9 @@ public class EasyMango
         }
         return true;
     }
-    public bool RemoveMultiplesDatabaseEntries(string field, string value)
+    public bool RemoveMultiplesDatabaseEntries<T>(string field, T value)
     {
-        List<BsonDocument> result = new List<BsonDocument>();
-        if (!GetMultipleDatabaseEntries(field, value, out result))
+        if (!GetMultipleDatabaseEntries(field, value, out List<BsonDocument> result))
         {
             return false;
         }
