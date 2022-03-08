@@ -5,7 +5,7 @@ namespace EasyMango;
 
 public class EasyMango
 {
-    private IMongoCollection<BsonDocument> collection;
+    private readonly IMongoCollection<BsonDocument> collection;
     
     public enum SortingOrder
     {
